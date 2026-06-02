@@ -625,6 +625,27 @@ def setup_document_routes(session_manager, upload_handler=None) -> APIRouter:
         finally:
             db.close()
 
+    # ---- POST /api/document/{doc_id}/deactivate — deactivate active document ----
+    @router.post("/api/document/{doc_id}/deactivate")
+    async def deactivate_document(request: Request, doc_id: str) -> Dict[str, Any]:
+        user = get_current_user(request)
+        db = SessionLocal()
+        try:
+            doc = db.query(Document).filter(Document.id == doc_id).first()
+            if not doc:
+                raise HTTPException(404, "Document not found")
+            _verify_doc_owner(db, doc, user)
+            from src.tool_implementations import get_active_document, set_active_document
+            if get_active_document() == doc_id:
+                set_active_document(None)
+            return {"ok": True, "id": doc_id}
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(500, str(e))
+        finally:
+            db.close()
+
     # ---- GET /api/document/{doc_id}/versions ----
     @router.get("/api/document/{doc_id}/versions")
     async def list_versions(request: Request, doc_id: str) -> List[Dict[str, Any]]:

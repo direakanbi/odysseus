@@ -3503,6 +3503,8 @@ import * as Modals from './modalManager.js';
     } else {
       fetch(`${API_BASE}/api/document/${docId}`, { method: 'DELETE' }).catch(() => {});
     }
+    // Deactivate the document on the server so it is removed from active context
+    fetch(`${API_BASE}/api/document/${docId}/deactivate`, { method: 'POST' }).catch(() => {});
     docs.delete(docId);
     _syncDocIndicator();
   }
